@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Twitter Clone</title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="style/style.css" />
+    <script
+      src="https://kit.fontawesome.com/c939d0e917.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+  </head>
+  <body>
+    <div class="container home-page">
+      <div class="navigation">
+        <div class="logo">
+          <i class="fab fa-twitter"></i>
+        </div>
+        <div class="home-link">
+          <i class="fas fa-home"></i>
+        </div>
+        <div class="ash">
+          <i class="fas fa-hashtag"></i>
+        </div>
+        <div class="bell">
+          <i class="far fa-bell"></i>
+        </div>
+        <div class="mail">
+          <i class="far fa-envelope"></i>
+        </div>
+        <div class="account">
+          <i class="far fa-user"></i>
+        </div>
+        <div class="tweetdiv">
+          <div class="tweet" onclick="trendReport()">
+            <i class="fas fa-feather-alt"></i>
+          </div>
+        </div>
+        <div class="profile-container-img">
+          <div class="profile-imgpfle"></div>
+        </div>
+      </div>
+
+      <div class="main">
+        <div class="main-home">
+          <h3>Home</h3>
+        </div>
+        <div class="profile-tweet">
+          <div class="profile-img"></div>
+          <div class="whatshappen">
+            <h3>What's Happening?</h3>
+            <div class="icons">
+              <div class="fonticons">
+                <i class="fas fa-upload"></i>
+                <i class="far fa-images"></i>
+                <i class="fas fa-video"></i>
+              </div>
+              <button type="button">Tweet</button>
+            </div>
+          </div>
+        </div>
+        <div class="tweet-data">
+          <div class="welcome">
+            <h3>Welcome to Twitter!</h3>
+          </div>
+          <div class="desc">
+            <p>
+              This is the best place to see what’s happening in your world. Find
+              some people and topics to follow now.
+            </p>
+          </div>
+          <div class="letsgo">
+            <button type="button">Let's go!</button>
+          </div>
+        </div>
+        <div class="tweet-api">
+         
+        </div>
+        <div class="next-page" onclick="onNextPage()">
+          <i class="fas fa-arrow-circle-down"></i>
+        </div>
+      </div>
+      <div class="trending">
+        <div class="trend-search">
+          <div class="searchicon" onclick="getTwitterData()">
+            <i class="fas fa-search"></i>
+          </div>
+          <input
+            type="text"
+            placeholder="Search Twitter"
+            onkeyup="onEnter(event)"
+            class="searchclass"
+          />
+        </div>
+        <div class="trend-happening">
+          <h3>What’s happening</h3>
+          <ul>
+            <li onclick="selectTrend(this)">#Covid19</li>
+            <li onclick="selectTrend(this)">#WebTrends</li>
+            <li onclick="selectTrend(this)">#EconomyinHunger</li>
+            <li onclick="selectTrend(this)">#TechnologyTrends</li>
+            <li onclick="selectTrend(this)">#Trading</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/index.js" async defer></script>
+  </body>
+</html>

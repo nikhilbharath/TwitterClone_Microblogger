@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Trending report</title>
+  <meta name="description" content="" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style/report.css" />
+  <link href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css" rel="stylesheet" />
+  <script src="https://kit.fontawesome.com/c939d0e917.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="./js/report.js"></script>
+
+  <script>
+    window.onload = function () {
+      // for chart config
+      const startDate = "";
+      const endDate = "";
+      //get overall data
+      geoveralldata();
+      //get overall Reddit data
+      overallRedditstats();
+
+      // get data stored
+      //datastored(dataoverall);
+
+      //call to get response on overall stats
+      overallstats();
+      //send the data received as response back to UI
+
+      //get only filtered count
+      // getBitCoinCount();
+      // getEthereumCount();
+      // getShibCount();
+      // getDodgeCount();
+      // getInputDates();
+      generateGraph([0, 0, 0, 0]);
+      generateRedditGraph([0, 0, 0, 0]);
+    };
+
+    function getInputDates() {
+      startDate = document.getElementById("startDate").value;
+      endDate = document.getElementById("endDate").value;
+
+      getBitCoinCount();
+      getEthereumCount();
+      getShibCount();
+      getDodgeCount();
+      getHourlyData();
+
+      getTwitterCoinCount().then((data) => {
+        generateGraph(data);
+      });
+
+      setTimeout(2000);
+
+      //reddit counts
+      getRedditBitCoinCount();
+      getEthereumFromReddit();
+      getShibFromReddit();
+      getDodgeFromReddit();
+      getRedditHourlyData();
+
+      showRedditcoinscount().then((data) => {
+        generateRedditGraph(data);
+      });
+    }
+    function getRedditHourlyData() {
+      fetch(
+        "http://localhost:3000/api/gethourlyReddit?" +
+        new URLSearchParams({
+          startDate: document.getElementById("startDate").value,
+          endDate: document.getElementById("endDate").value,
+        }),
+        {
+          method: "GET", // *GET, POST, PUT, DELETE, etc.
+        }
+      )
+        .then((response) => {
+          console.log(response);
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Get Hourly Data : " + data[0]);
+          // console.log(data);
+          displayRedditHourlyStats(data[0], data[1]);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+
+    function getHourlyData() {
+      fetch(
+        "http://localhost:3000/api/gethourly?" +
+        new URLSearchParams({
+          startDate: document.getElementById("startDate").value,
+          endDate: document.getElementById("endDate").value,
+        }),
+        {
+          method: "GET", // *GET, POST, PUT, DELETE, etc.
+        }
+      )
+        .then((response) => {
+          console.log(response);
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Get Hourly Data : " + data[0]);
+          // console.log(data);
+          displayHourlyStats(data[0], data[1]);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+
+     function displayHourlyStats(dataarr, arr) {
+      let chartStatus = Chart.getChart("myHourlyChart"); // <canvas> id
+      if (chartStatus != undefined) {
+        chartStatus.destroy();
+      }
+      console.log("Displaying Visualization");
+      console.log(dataarr);
+      const array = document.getElementById("startDate").value.split("-");
+      const tarray = document.getElementById("endDate").value.split("-");
+      const data = {
+        //labels: ["24 Nov","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","25 Nov","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23"],
+        labels: arr,
+        datasets: [
+          {
+            label: "Hourly Tweet Counts",
+            data: dataarr,
+            backgroundColor: [
+              "rgba(255, 26, 104, 0.2)",
+              "rgba(54, 162, 235, 0.2)",
+              "rgba(255, 206, 86, 0.2)",
+              "rgba(75, 192, 192, 0.2)",
+              "rgba(153, 102, 255, 0.2)",
+              "rgba(255, 159, 64, 0.2)",
+              "rgba(0, 0, 0, 0.2)",
+            ],
+            borderColor: [
+              "rgba(255, 26, 104, 1)",
+              "rgba(54, 162, 235, 1)",
+              "rgba(255, 206, 86, 1)",
+              "rgba(75, 192, 192, 1)",
+              "rgba(153, 102, 255, 1)",
+              "rgba(255, 159, 64, 1)",
+              "rgba(0, 0, 0, 1)",
+            ],
+            borderWidth: 1,
+          },
+        ],
+      };
+
+      // config
+      const config = {
+        type: "bar",
+        data,
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      };
+
+      // render init block
+      const myChart = new Chart(
+        document.getElementById("myHourlyChart"),
+        config
+      );
+    }
+
+     function displayRedditHourlyStats(dataarr, arr) {
+      let chartStatus = Chart.getChart("myHourlyChartReddit"); // <canvas> id
+      if (chartStatus != undefined) {
+        chartStatus.destroy();
+      }
+      console.log(dataarr);
+      const array = document.getElementById("startDate").value.split("-");
+      const tarray = document.getElementById("endDate").value.split("-");
+      const data = {
+        //labels: ["24 Nov","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","25 Nov","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23"],
+        labels: arr,
+        datasets: [
+          {
+            label: "Hourly SubReddit Counts",
+            data: dataarr,
+            backgroundColor: [
+              "rgba(255, 26, 104, 0.2)",
+              "rgba(54, 162, 235, 0.2)",
+              "rgba(255, 206, 86, 0.2)",
+              "rgba(75, 192, 192, 0.2)",
+              "rgba(153, 102, 255, 0.2)",
+              "rgba(255, 159, 64, 0.2)",
+              "rgba(0, 0, 0, 0.2)",
+            ],
+            borderColor: [
+              "rgba(255, 26, 104, 1)",
+              "rgba(54, 162, 235, 1)",
+              "rgba(255, 206, 86, 1)",
+              "rgba(75, 192, 192, 1)",
+              "rgba(153, 102, 255, 1)",
+              "rgba(255, 159, 64, 1)",
+              "rgba(0, 0, 0, 1)",
+            ],
+            borderWidth: 1,
+          },
+        ],
+      };
+
+      // config
+      const config = {
+        type: "bar",
+        data,
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      };
+
+      // render init block
+      const myChart = new Chart(
+        document.getElementById("myHourlyChartReddit"),
+        config
+      );
+    }
+
+
+     function generateRedditGraph(dataarr) {
+      let chartStatus = Chart.getChart("myReditChart"); // <canvas> id
+      if (chartStatus != undefined) {
+        chartStatus.destroy();
+      }
+      const data = {
+        labels: ["BitCoin", "Ethereum", "ShibuInu", "Dodge"],
+        datasets: [
+          {
+            label: "Reddit Subreddit Counts",
+            data: dataarr,
+            backgroundColor: [
+              "rgba(255, 26, 104, 0.2)",
+              "rgba(54, 162, 235, 0.2)",
+              "rgba(255, 206, 86, 0.2)",
+              "rgba(75, 192, 192, 0.2)",
+              "rgba(153, 102, 255, 0.2)",
+              "rgba(255, 159, 64, 0.2)",
+              "rgba(0, 0, 0, 0.2)",
+            ],
+            borderColor: [
+              "rgba(255, 26, 104, 1)",
+              "rgba(54, 162, 235, 1)",
+              "rgba(255, 206, 86, 1)",
+              "rgba(75, 192, 192, 1)",
+              "rgba(153, 102, 255, 1)",
+              "rgba(255, 159, 64, 1)",
+              "rgba(0, 0, 0, 1)",
+            ],
+            borderWidth: 1,
+          },
+        ],
+      };
+
+      // config
+      const config = {
+        type: "bar",
+        data,
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      };
+
+      // render init block
+      const myChart = new Chart(
+        document.getElementById("myReditChart"),
+        config
+      );
+    }
+
+     function generateGraph(dataarr) {
+      let chartStatus = Chart.getChart("myChart"); // <canvas> id
+      if (chartStatus != undefined) {
+        chartStatus.destroy();
+      }
+      const data = {
+        labels: ["BitCoin", "Ethereum", "ShibuInu", "Dodge"],
+        datasets: [
+          {
+            label: "Twitter Tweet Counts",
+            data: dataarr,
+            backgroundColor: [
+              "rgba(255, 26, 104, 0.2)",
+              "rgba(54, 162, 235, 0.2)",
+              "rgba(255, 206, 86, 0.2)",
+              "rgba(75, 192, 192, 0.2)",
+              "rgba(153, 102, 255, 0.2)",
+              "rgba(255, 159, 64, 0.2)",
+              "rgba(0, 0, 0, 0.2)",
+            ],
+            borderColor: [
+              "rgba(255, 26, 104, 1)",
+              "rgba(54, 162, 235, 1)",
+              "rgba(255, 206, 86, 1)",
+              "rgba(75, 192, 192, 1)",
+              "rgba(153, 102, 255, 1)",
+              "rgba(255, 159, 64, 1)",
+              "rgba(0, 0, 0, 1)",
+            ],
+            borderWidth: 1,
+          },
+        ],
+      };
+
+      // config
+      const config = {
+        type: "bar",
+        data,
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      };
+
+      // render init block
+      const myChart = new Chart(document.getElementById("myChart"), config);
+    }
+
+     function getTwitterCoinCount() {
+      var returndataforGraph;
+      return fetch("http://localhost:3000/api/showtwittercoinscount", {
+        method: "GET", // *GET, POST, PUT, DELETE, etc.
+      })
+        .then((response) => {
+          //console.log(response);
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Get getTwitterCoinCount count : " + data);
+          // console.log(data);
+          returndataforGraph = data;
+          //displaystats(data);
+          return returndataforGraph;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+
+    function getDodgeCount() {
+      fetch(
+        "http://localhost:3000/api/getdodge?" +
+        new URLSearchParams({
+          startDate: document.getElementById("startDate").value,
+          endDate: document.getElementById("endDate").value,
+        }),
+        {
+          method: "GET", // *GET, POST, PUT, DELETE, etc.
+        }
+      )
+        .then((response) => {
+          //console.log(response);
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Get getdodge from twitter count : " + data);
+          // console.log(data);
+          //displaystats(data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+
+    function getShibCount() {
+      fetch(
+        "http://localhost:3000/api/getshib?" +
+        new URLSearchParams({
+          startDate: document.getElementById("startDate").value,
+          endDate: document.getElementById("endDate").value,
+        }),
+        {
+          method: "GET", // *GET, POST, PUT, DELETE, etc.
+        }
+      )
+        .then((response) => {
+          //console.log(response);
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Get getshibInu from twitter count : " + data);
+          // console.log(data);
+          //displaystats(data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+
+    function getEthereumCount() {
+      fetch(
+        "http://localhost:3000/api/getEthereum?" +
+        new URLSearchParams({
+          startDate: document.getElementById("startDate").value,
+          endDate: document.getElementById("endDate").value,
+        }),
+        {
+          method: "GET", // *GET, POST, PUT, DELETE, etc.
+        }
+      )
+        .then((response) => {
+          //console.log(response);
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Get getEthereum from twitter count : " + data);
+          // console.log(data);
+          //displaystats(data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+
+    function getBitCoinCount() {
+      fetch(
+        "http://localhost:3000/api/getbitcoin?" +
+        new URLSearchParams({
+          startDate: document.getElementById("startDate").value,
+          endDate: document.getElementById("endDate").value,
+        }),
+        {
+          method: "GET", // *GET, POST, PUT, DELETE, etc.
+        }
+      )
+        .then((response) => {
+          //console.log(response);
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Get bitcoin from twitter count : " + data);
+          // console.log(data);
+          //displaystats(data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+
+    function overallstats() {
+      //console.log("call entered overallstats method");
+
+      fetch("http://localhost:3000/api/getstats", {
+        method: "GET", // *GET, POST, PUT, DELETE, etc.
+      })
+        .then((response) => {
+          //console.log(response);
+          return response.json();
+        })
+        .then((data) => {
+          //console.log(data);
+          displaystats(data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+    function overallRedditstats() {
+      //console.log("call entered overallstats method");
+
+      fetch("http://localhost:3000/api/getRedditstats", {
+        method: "GET", // *GET, POST, PUT, DELETE, etc.
+      })
+        .then((response) => {
+          //console.log(response);
+          return response.json();
+        })
+        .then((data) => {
+          //console.log(data);
+          displayRedditData(data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+
+    // overallRedittable
+
+    function displayRedditData(stats) {
+      var customers = new Array();
+      customers.push([
+        "Collection_Name",
+        "Documents",
+        "Average document Size",
+        "Total Document Size",
+        "No. of Indexes",
+        "Total Index Size",
+      ]);
+      // console.log(data);
+      let reqitems = [0, 2, 3, 1, 8, 11]; //taking req items only for now
+      let temparr = [];
+      for (let i = 0; i < stats.length; i++) {
+        temparr = [];
+        for (let j = 0; j < reqitems.length; j++) {
+          //console.log(Object.values(stats[i])[11]);
+          temparr.push(Object.values(stats[i])[reqitems[j]]);
+        }
+        customers.push(temparr);
+      }
+      console.log("entered reditstats", customers);
+
+      //Create a HTML Table element.
+      var table = document.createElement("TABLE");
+      table.border = "1";
+
+      //Get the count of columns.
+      var columnCount = customers[0].length;
+
+      //Add the header row.
+      var row = table.insertRow(-1);
+      for (var i = 0; i < columnCount; i++) {
+        var headerCell = document.createElement("TH");
+        headerCell.innerHTML = customers[0][i];
+        row.appendChild(headerCell);
+      }
+
+      //Add the data rows.
+      for (var i = 1; i < customers.length; i++) {
+        // row.style.backgroundColor='#fffff';
+        row = table.insertRow(-1);
+        // row.style.backgroundColor='#fa4667';
+        for (var j = 0; j < columnCount; j++) {
+          var cell = row.insertCell(-1);
+          cell.innerHTML = customers[i][j];
+        }
+      }
+
+      var dvTable = document.getElementById("overallRedittable");
+      dvTable.innerHTML = "";
+      dvTable.appendChild(table);
+    }
+
+    function displaystats(stats) {
+      // console.log("stats data ", stats);
+      //Build an array containing Customer records.
+      var customers = new Array();
+      customers.push([
+        "Collection_Name",
+        "Documents",
+        "Average document Size",
+        "Total Document Size",
+        "No. of Indexes",
+        "Total Index Size",
+      ]);
+      // console.log(data);
+      let reqitems = [0, 2, 3, 1, 8, 11]; //taking req items only for now
+      let temparr = [];
+      for (let i = 0; i < stats.length; i++) {
+        temparr = [];
+        for (let j = 0; j < reqitems.length; j++) {
+          //console.log(Object.values(stats[i])[11]);
+          temparr.push(Object.values(stats[i])[reqitems[j]]);
+        }
+        customers.push(temparr);
+      }
+      //console.log("customer", customers);
+
+      //Create a HTML Table element.
+      var table = document.createElement("TABLE");
+      table.border = "1";
+
+      //Get the count of columns.
+      var columnCount = customers[0].length;
+
+      //Add the header row.
+      var row = table.insertRow(-1);
+      for (var i = 0; i < columnCount; i++) {
+        var headerCell = document.createElement("TH");
+        headerCell.innerHTML = customers[0][i];
+        row.appendChild(headerCell);
+      }
+
+      //Add the data rows.
+      for (var i = 1; i < customers.length; i++) {
+        // row.style.backgroundColor='#fffff';
+        row = table.insertRow(-1);
+        // row.style.backgroundColor='#fa4667';
+        for (var j = 0; j < columnCount; j++) {
+          var cell = row.insertCell(-1);
+          cell.innerHTML = customers[i][j];
+        }
+      }
+
+      var dvTable = document.getElementById("overallOrdertable");
+      dvTable.innerHTML = "";
+      dvTable.appendChild(table);
+    }
+
+    function datastored(dataoverall) {
+      //console.log(dataoverall);
+      new gridjs.Grid({
+        columns: ["created_at", "hash_tags", "source", "Content"],
+        search: true,
+        sort: true,
+        height: "500px",
+        width: "1200px",
+
+        pagination: {
+          limit: 3,
+        },
+        data: dataoverall,
+        className: {
+          table: "table-body",
+        },
+        language: {
+          search: {
+            placeholder: "🔍 Search name, email...",
+          },
+          pagination: {
+            previous: "⬅️",
+            next: "➡️",
+            showing: "👓 Displaying",
+            results: () => "Records",
+          },
+        },
+      }).render(document.getElementById("wrapper"));
+    }
+
+     function geoveralldata() {
+      fetch("http://localhost:3000/api/getall", {
+        method: "GET", // *GET, POST, PUT, DELETE, etc.
+      })
+        .then((response) => {
+          // console.log(response);
+          return response.json();
+        })
+        .then((data) => {
+          //console.log(data);
+          dataoverall = displayoveralldata(data);
+          const returndata = datastored(dataoverall);
+          return returndata;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+
+    function displayoveralldata(data) {
+      const overallArray = [];
+      data.forEach((element) => {
+        //          console.log("element",element.entities.hashtags[0].tag);
+        overallArray.push([
+          element.created_at,
+          element?.entities?.hashtags?.[0].tag,
+          element.source,
+          element.text,
+        ]);
+      });
+      return overallArray;
+    }
+    //reddit data stored and fetch
+    function getRedditBitCoinCount() {
+      fetch(
+        "http://localhost:3000/api/getbitcoinFromReddit?" +
+        new URLSearchParams({
+          startDate: document.getElementById("startDate").value,
+          endDate: document.getElementById("endDate").value,
+        }),
+        {
+          method: "GET", // *GET, POST, PUT, DELETE, etc.
+        }
+      )
+        .then((response) => {
+          //console.log(response);
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Get bitcoin from Reddit count : " + data);
+          // console.log(data);
+          //displaystats(data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+
+    function getDodgeFromReddit() {
+      fetch(
+        "http://localhost:3000/api/getDodgeFromReddit?" +
+        new URLSearchParams({
+          startDate: document.getElementById("startDate").value,
+          endDate: document.getElementById("endDate").value,
+        }),
+        {
+          method: "GET", // *GET, POST, PUT, DELETE, etc.
+        }
+      )
+        .then((response) => {
+          //console.log(response);
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Get Dodge from Reddit count : " + data);
+          // console.log(data);
+          //displaystats(data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+
+    function getShibFromReddit() {
+      fetch(
+        "http://localhost:3000/api/getShibFromReddit?" +
+        new URLSearchParams({
+          startDate: document.getElementById("startDate").value,
+          endDate: document.getElementById("endDate").value,
+        }),
+        {
+          method: "GET", // *GET, POST, PUT, DELETE, etc.
+        }
+      )
+        .then((response) => {
+          //console.log(response);
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Get ShibInu from Reddit count : " + data);
+          // console.log(data);
+          //displaystats(data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+
+    function getEthereumFromReddit() {
+      fetch(
+        "http://localhost:3000/api/getEthereumFromReddit?" +
+        new URLSearchParams({
+          startDate: document.getElementById("startDate").value,
+          endDate: document.getElementById("endDate").value,
+        }),
+        {
+          method: "GET", // *GET, POST, PUT, DELETE, etc.
+        }
+      )
+        .then((response) => {
+          //console.log(response);
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Get Ethereum from Reddit count : " + data);
+          // console.log(data);
+          //displaystats(data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+
+     function showRedditcoinscount() {
+      var returndataforGraph;
+      return fetch("http://localhost:3000/api/showRedditcoinscount", {
+        method: "GET", // *GET, POST, PUT, DELETE, etc.
+      })
+        .then((response) => {
+          //console.log(response);
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Get showRedditcoinscount count : " + data);
+          // console.log(data);
+          returndataforGraph = data;
+          //displaystats(data);
+          return returndataforGraph;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+  </script>
+</head>
+
+<body>
+  <div class="App">
+    <div class="gradient__bg">
+      <div class="gpt3__navbar">
+        <div class="gpt3__navbar-links">
+          <div class="gpt3__navbar-links_logo">
+            <!-- <img src="{logo}" /> -->
+          </div>
+          <div class="gpt3__navbar-links_container">
+            <p><a href="#home">Home</a></p>
+            <p><a href="#storeddata">Data_Stored</a></p>
+            <p><a href="#trending">Trending</a></p>
+            <p><a href="#visualization">visualization</a></p>
+            <div class="search">
+              <div class="icon"></div>
+              <div class="input">
+                <input type="text" placeholder="Search" id="mysearch" />
+              </div>
+              <span class="clear" onclick="document.getElementById('mysearch').value=''"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Data Stored -->
+    </div>
+    <div class="container">
+      <div class="text-intro">
+        <h1>Data Trending and Visualization</h1>
+        <!-- <p>Click on the countries to see the effect</p> -->
+      </div>
+      <header class="page-header" id="home">
+        <nav>
+          <ul>
+            <li>
+              <a href="#home">Home -
+                <span> This page shows the entire content</span>
+              </a>
+            </li>
+            <li>
+              <a href="#storeddata">Data_Stored -
+                <span>
+                  Implementation to show the entire data collected and its
+                  statistics</span></a>
+            </li>
+            <li>
+              <a href="#trending">trending -
+                <span>
+                  Implementation for search and filter contents from the
+                  stream of data collected</span>
+              </a>
+            </li>
+            <li>
+              <a href="#visualization">visualization -
+                <span>
+                  Implementation to show graphically the trend for the data
+                  collected</span></a>
+            </li>
+          </ul>
+        </nav>
+      </header>
+    </div>
+    <section class="section" id="storeddata">
+      <!-- <div class="gpt3__whatgpt3 section__margin" id="wgpt3"> -->
+      <!-- <div class="gpt3__whatgpt3-heading">
+            <h1 class="gradient__text">
+              The possibilities are beyond your imagination
+            </h1>
+            <p>Explore the Library</p>
+          </div> -->
+      <div class="datacollected">
+        <div id="overallOrdertable"></div>
+        <div id="overallRedittable"></div>
+      </div>
+      <!-- </div> -->
+    </section>
+    <section class="section" id="trending">
+      <div id="wrapper"></div>
+    </section>
+    <section class="section" id="visualization">
+      <div class="searchinput">
+        <div class="twosearchbox">
+          <input style="appearance: none;
+            background-color: #fff;
+            border: 1px solid #d2d6dc;
+            border-radius: 5px;
+            font-size: 14px;
+            line-height: 1.45;
+            width:300px;
+            outline: none;
+            padding: 10px 13px;" type="text" placeholder="🔍 from date (YYYY-MM-DD)" id="startDate" />
+          <input style="appearance: none;
+            background-color: #fff;
+            border: 1px solid #d2d6dc;
+            border-radius: 5px;
+            font-size: 14px;
+            line-height: 1.45;
+            width:300px;
+            outline: none;
+            padding: 10px 13px;" placeholder="🔍 to date (YYYY-MM-DD)" type="text" placeholder="Search" id="endDate" />
+        </div>
+        <button class="button srchbtn" id="searchbtn" type="submit" onclick="getInputDates()">
+          Search
+        </button>
+      </div>
+      <div class="chartCard">
+        <div class="chartBox">
+          <canvas id="myChart"></canvas>
+        </div>
+        <div class="chartBox1">
+          <canvas id="myReditChart"></canvas>
+        </div>
+      </div>
+      <div class="chartCardhourly">
+        <div class="chartBox2">
+          <canvas id="myHourlyChart"></canvas>
+        </div>
+        <div class="chartBox3">
+          <canvas id="myHourlyChartReddit"></canvas>
+        </div>
+      </div>
+      <!-- <div class="chartCard">
+        
+      </div> -->
+    </section>
+  </div>
+
+  <script>
+    const icon = document.querySelector(".icon");
+    const search = document.querySelector(".search");
+    icon.onclick = function () {
+      search.classList.toggle("active");
+    };
+  </script>
+</body>
+
+</html>
